@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#0c1220">
+<title>아라랏 Ararat - 대한민국 비자 가이드</title>
+<meta name="description" content="ATOMIC 행정 · 38개 비자 서류·요건·점수계산기">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2655187234157942" crossorigin="anonymous"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Noto Sans KR',-apple-system,BlinkMacSystemFont,sans-serif;background:#f8f8fa;color:#111;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+input[type=radio],input[type=checkbox]{accent-color:#e94560;flex-shrink:0;width:16px;height:16px;cursor:pointer}
+::-webkit-scrollbar{display:none}
+@media(min-width:1024px){.grid-cards{grid-template-columns:1fr 1fr!important}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+<script type="text/babel">
+const {useState,useMemo,useEffect}=React;
+
+function useScreen(){
+  const [w,setW]=useState(window.innerWidth);
+  useEffect(()=>{const h=()=>setW(window.innerWidth);window.addEventListener("resize",h);return()=>window.removeEventListener("resize",h)},[]);
+  return{m:w<640,dk:w>=1024};
+}
+
+const CC={"외교·공무":"#1a1a2e","단기":"#16213e","연수·학술":"#0f3460","장기체류":"#533483","전문취업":"#e94560","비전문취업":"#f38181","방문·동반":"#aa96da","거주":"#d63384","동포":"#0d6efd","영주":"#c19a00","결혼":"#ff6b6b","기타":"#6c757d"};
+
+const VISAS=[
+{code:"A-1",name:"외교",en:"Diplomat",cat:"외교·공무",stay:"협정기간",desc:"외국정부 외교사절단 구성원·수행원 및 동반가족",docs:["외교관 여권","공관장 공한","외교부 확인"],reqs:["외국정부 외교사절단 또는 영사기관 구성원","비엔나 협약에 의한 특권·면제 대상"],tips:"외국인등록 면제. 수수료 면제.",routes:[]},
+{code:"A-2",name:"공무",en:"Gov. Official",cat:"외교·공무",stay:"협정기간",desc:"외국정부·국제기구 공무 수행자 및 동반가족",docs:["관용 여권","파견기관 공한","외교부 또는 주무부처 확인서"],reqs:["외국정부 또는 국제기구 공무 수행","대한민국 정부가 인정한 공적 임무"],tips:"외교관(A-1)과 달리 특권·면제 제한적.",routes:[]},
+{code:"A-3",name:"협정",en:"Agreement",cat:"외교·공무",stay:"협정기간",desc:"한미행정협정(SOFA) 등 국제협정 체류자",docs:["여권","해당 협정 관련 확인서","주한미군 ID (SOFA 해당 시)"],reqs:["대한민국 체결 국제협정에 의한 체류 자격","SOFA, NATO 등 해당 협정 적용 대상"],tips:"협정별로 체류 조건 상이.",routes:[]},
+{code:"B-1",name:"사증면제",en:"Visa Exemption",cat:"단기",stay:"협정별 상이",desc:"사증면제협정 체결국 국민. 관광·상용·친지방문 등",docs:["여권 (유효기간 6개월 이상)","왕복항공권","숙박 예약 확인"],reqs:["사증면제협정 체결국 국민","체류 목적이 관광·상용 등 단기 활동","취업활동 불가"],tips:"국가별 체류기간 상이 (30~90일). 연장·취업 전환 불가.",routes:[]},
+{code:"B-2",name:"관광통과",en:"Tourist Transit",cat:"단기",stay:"30일",desc:"관광·통과 목적 단기 체류",docs:["여권","왕복항공권","체류 목적 입증서류"],reqs:["관광 또는 통과 목적","30일 이내 출국 예정"],tips:"제주도 무사증 입국과 구분. 연장 불가.",routes:[]},
+{code:"C-1",name:"일시취재",en:"Temp. Journalism",cat:"단기",stay:"90일",desc:"일시적 취재·보도 활동",docs:["여권","소속 언론사 재직증명서","취재계획서","초청장 (해당 시)"],reqs:["외국 언론사 소속 기자·PD 등","일시적 취재·보도 목적 (90일 이내)"],tips:"90일 초과 시 D-5(취재)로 변경 필요.",routes:[]},
+{code:"C-3",name:"단기방문",en:"Short-term Visit",cat:"단기",stay:"90일",desc:"단기방문 10개 유형 (C-3-1 일반관광 ~ C-3-10)",docs:["여권","초청장 또는 방문 목적 입증서류","재정능력 입증 (잔고증명 등)","숙박 예약"],reqs:["관광·상용·친지방문 등 90일 이내","취업활동 불가","체류기간 내 출국 의사"],tips:"C-3-9 (단기방문 일반)이 가장 흔함.",routes:[]},
+{code:"C-4",name:"단기취업",en:"Short-term Work",cat:"단기",stay:"90일",desc:"단기간 취업활동 (공연·광고·강연·패션모델 등)",docs:["여권","고용계약서 또는 초청장","주무부처 추천서 (해당 시)","경력증명서"],reqs:["90일 이내 단기 취업활동","일시 흥행, 광고, 강연 등"],tips:"90일 초과 불가. 공연은 별도 추천서 필요.",routes:[]},
+{code:"D-1",name:"문화예술",en:"Culture & Arts",cat:"연수·학술",stay:"2년",desc:"수익 없는 학술·예술 활동",docs:["여권","활동계획서","초청 또는 수용기관 확인서","학력·경력 증명서","재정능력 입증"],reqs:["수익을 목적으로 하지 않는 학술·예술 활동","초청기관 또는 수용기관 확인"],tips:"수익 발생 시 E 계열 비자로 변경 필요.",routes:[]},
+{code:"D-2",name:"유학",en:"Study Abroad",cat:"연수·학술",stay:"2년",desc:"전문대 이상 정규과정 유학 (D-2-1~8)",docs:["여권","입학허가서","최종학력 증명서","재정능력 입증 (은행잔고 $20,000↑ 또는 장학금)","건강보험 가입증명","숙소 확인서"],reqs:["인가된 전문대 이상 정규 교육기관 입학허가","재정능력 입증 (학비+생활비)","출석률 70% 이상 (연장 시)","성적 C학점 이상 (연장 시)"],tips:"시간제 취업: 학기중 주 20시간 (석·박사 30시간), 방학 무제한. 출석률 미달 시 연장 거부.",sample:"구직활동계획서",routes:["D-10","E-7","F-2-7"]},
+{code:"D-4",name:"일반연수",en:"General Training",cat:"연수·학술",stay:"2년",desc:"어학연수·기술연수·사설교육기관 연수",docs:["여권","연수기관 입학·수료 확인서","재정능력 입증","건강보험 가입증명"],reqs:["법무부 인정 교육기관 등록","출석률 70% 이상","6개월 단위 연장"],tips:"어학연수 후 D-2 전환 가능. 출석률 관리 중요.",routes:[]},
+{code:"D-4-6",name:"기술연수",en:"Tech. Training",cat:"연수·학술",stay:"2년",desc:"우수사설교육기관 직업기술 교육과정",docs:["여권","교육기관 입학허가서","교육과정 확인서","재정능력 입증"],reqs:["법무부 지정 우수사설교육기관","직업기술 교육과정 등록"],tips:"D-4와 유사하나 직업기술에 특화.",routes:[]},
+{code:"D-5",name:"취재",en:"Journalism",cat:"연수·학술",stay:"2년",desc:"외국 언론사의 국내 상주 취재·보도",docs:["여권","소속 언론사 재직증명서","국내 지사 설치 확인서","납세증명서"],reqs:["외국 언론사 정규 직원","국내 상주 취재·보도 목적"],tips:"C-1(일시취재)과 달리 장기 상주용.",routes:[]},
+{code:"D-6",name:"종교",en:"Religion",cat:"연수·학술",stay:"2년",desc:"외국 종교단체 선교·포교 활동",docs:["여권","소속 종교단체 파견 확인서","국내 종교단체 초청장","활동계획서"],reqs:["외국 종교단체에서 파견","국내 종교단체 초청 또는 수용"],tips:"포교·선교 활동만 가능. 취업 불가.",routes:[]},
+{code:"D-7",name:"주재",en:"Intra-co. Transfer",cat:"장기체류",stay:"3년",desc:"외국기업 필수전문인력 국내지사 주재",docs:["여권","본사 파견 확인서","국내 법인등기부등본","고용계약서","재직·경력증명서","납세증명서"],reqs:["외국기업 1년 이상 근무","국내 지사·연락사무소 파견","필수전문인력"],tips:"본사 1년 이상 근무 필수. D-8(투자)과 구분.",routes:[]},
+{code:"D-8",name:"기업투자",en:"Corp. Investment",cat:"장기체류",stay:"5년",desc:"외국인투자기업 경영·벤처·기술창업 (D-8-1~4S)",docs:["여권","★사업계획서 (A4 5~10쪽)","투자계획서","법인등기부등본","외국인투자기업 등록증","고용계약서","납세증명서"],reqs:["D-8-1 법인투자: 1억원↑ 투자","D-8-2 벤처: 벤처기업 확인","D-8-3 개인기업: 1억원↑","D-8-4 기술창업: 점수제 60점","D-8-4S 스타트업코리아"],tips:"★ 사업계획서 핵심: 투자목적, 사업내용, 매출추정, 고용계획 상세. 투자금 3억 미만 시 자금사용내역 추가. 행정사 대행 50~200만원.",sample:"사업계획서",routes:["F-5"]},
+{code:"D-9",name:"무역경영",en:"Trade Mgmt.",cat:"장기체류",stay:"2년",desc:"무역업 고유번호 보유 무역·사업 경영",docs:["여권","무역업 고유번호 확인서","사업자등록증","납세증명서","무역실적 증빙"],reqs:["무역업 고유번호 보유","직전 연도 수출입 실적","국내 직접 경영"],tips:"무역실적 없으면 연장 거부 가능.",routes:[]},
+{code:"D-10",name:"구직",en:"Job Seeking",cat:"장기체류",stay:"6개월",desc:"졸업 후 구직활동 (D-10-1 점수제, D-10-2 기술창업 준비)",docs:["여권","★구직활동 계획서","졸업증명서 또는 학위증","성적증명서","이력서","구직활동 입증서류 (연장 시)"],reqs:["국내 전문대↑ 졸업자 또는 해외 학사↑","D-10-1 점수제 기준 충족","최대 1년 (6+6개월)"],tips:"★ 구직활동 계획서: 구직 분야, 계획, 희망 직종 기재. 취업 전환 핵심 단계.",sample:"구직활동계획서",routes:["E-7","D-8"]},
+{code:"E-1",name:"교수",en:"Professor",cat:"전문취업",stay:"5년",desc:"전문대 이상 교육·연구기관 교수",docs:["여권","고용계약서","학위증명서 (박사)","연구실적 증빙","초청기관 사업자등록증"],reqs:["전문대↑ 교육기관 전임·비전임 교수","박사학위 소지 (원칙)"],tips:"전임과 비전임 구분. 연구실적 중요.",routes:[]},
+{code:"E-2",name:"회화지도",en:"Lang. Instructor",cat:"전문취업",stay:"2년",desc:"외국어 회화지도 (원어민 강사)",docs:["여권","학위증명서 (학사↑)","★범죄경력증명서 (아포스티유)","채용신체검사서 (마약검사 포함)","고용계약서","TESOL/TEFL 자격증"],reqs:["해당 언어 모국어 사용국 국적","학사학위 이상","범죄경력 없음","건강검진 통과 (마약검사)"],tips:"범죄경력증명서 아포스티유 인증 필수. 법무부 지정 의료기관 검진.",routes:[]},
+{code:"E-3",name:"연구",en:"Research",cat:"전문취업",stay:"5년",desc:"공·사 연구기관 자연·사회과학 연구",docs:["여권","고용계약서","학위증명서 (석사↑)","연구실적","초청기관 확인서"],reqs:["석사↑ 학위 또는 동등 경력","공·사 연구기관 고용계약"],tips:"국책연구기관은 발급 신속.",routes:[]},
+{code:"E-4",name:"기술지도",en:"Tech Transfer",cat:"전문취업",stay:"5년",desc:"공·사기관 기술 제공",docs:["여권","기술도입계약서","경력증명서","초청기관 사업자등록증","납세증명서"],reqs:["자연과학 또는 산업 특수분야 기술 보유","국내 기관과 기술도입계약"],tips:"기술이전 목적. E-7과 구분 필요.",routes:[]},
+{code:"E-5",name:"전문직업",en:"Professional",cat:"전문취업",stay:"5년",desc:"법률·회계·의료 등 전문 자격 활동",docs:["여권","해당 전문자격증","경력증명서","고용계약서","주무부처 자격 확인"],reqs:["대한민국 법령에 의한 전문자격 보유","해당 분야 자격증 또는 면허"],tips:"외국 변호사(FLC), 회계사, 의사 등. 국내 자격 인정 절차 필요.",routes:[]},
+{code:"E-6",name:"예술흥행",en:"Arts & Ent.",cat:"전문취업",stay:"2년",desc:"예술·연예·스포츠 (E-6-1~3)",docs:["여권","공연·활동 계약서","주무부처 추천서 (해당 시)","경력·수상내역","초청기관 확인서"],reqs:["예술·연예·체육 분야 활동","구체적 활동 계획","E-6-2(호텔연예) 특별 심사"],tips:"호텔·유흥업소 관련 E-6-2는 인신매매 방지 차원 엄격 심사.",routes:[]},
+{code:"E-7",name:"특정활동",en:"Designated Act.",cat:"전문취업",stay:"3~5년",desc:"94개 직종 전문인력 (E-7-1~4, E-7-S/Y/T)",docs:["여권","★고용사유서","고용계약서","학위증명서","경력증명서","고용추천서 (해당 직종)","사업자등록증","납세증명서"],reqs:["E-7-1 전문인력: 석사↑ 또는 학사+1년","E-7-2 준전문: 해당 직종 자격","E-7-3 일반기능: 학사+1년 또는 5년 경력","E-7-4 숙련기능: E-9에서 4년↑ + 점수제","E-7-S 네거티브: GNI 3배(S1) 또는 점수60+첨단(S2)"],tips:"★ 고용사유서: 내국인 대체 불가 사유, 채용공고 증빙 첨부 필수. 직종코드 확인 필수.",sample:"고용사유서",routes:["F-2-7","F-5"]},
+{code:"E-8",name:"계절근로",en:"Seasonal Work",cat:"비전문취업",stay:"5개월",desc:"계절근로 허용 자치단체 농·어업",docs:["여권","지자체 배정 확인서","근로계약서","건강검진서"],reqs:["지자체 계절근로 배정","농·어업 등 허용 업종","5개월 이내 귀국"],tips:"지자체별 배정. 연장·전환 불가 원칙.",routes:[]},
+{code:"E-9",name:"비전문취업",en:"Non-professional",cat:"비전문취업",stay:"3년",desc:"고용허가제 (17개국 MOU). 최장 4년 10개월",docs:["여권","★표준근로계약서","고용허가서","건강검진서","기술능력 입증 (해당 시)","출국만기보험 가입"],reqs:["고용허가제 MOU 17개국 국적","EPS-TOPIK 합격","사업장 배정","최장 4년 10개월 (3년+1년10개월)"],tips:"★ 표준근로계약서: 고용주/신청자 공동작성, 임금·근로조건 기재. 이직은 사업장 변경 사유 시만 가능. E-7-4 전환이 영주 핵심 경로. 수임가 10~50만원.",sample:"표준근로계약서",routes:["E-7-4"]},
+{code:"E-10",name:"선원취업",en:"Crew Employ.",cat:"비전문취업",stay:"3년",desc:"내항선원·어선원·순항여객선원 (E-10-1~3)",docs:["여권","선원근로계약서","선박 소유자 확인서","건강검진서","해기사 면허 (해당 시)"],reqs:["선원근로계약 체결","해당 선종 자격","건강검진 통과"],tips:"어선원(E-10-2)이 가장 많음.",routes:[]},
+{code:"F-1",name:"방문동거",en:"Family Visit",cat:"방문·동반",stay:"2년",desc:"친척 방문·가족 동거·가사정리",docs:["여권","가족관계증명서","초청장","초청인 재직·소득증명","체류지 입증서류"],reqs:["국민 또는 영주자의 친족","초청인 부양능력 입증"],tips:"취업 원칙적 불가. 체류자격외 활동허가로 제한적 취업.",routes:[]},
+{code:"F-2-7",name:"거주 (점수제)",en:"Residence (Points)",cat:"거주",stay:"1~5년",desc:"점수제 우수인재 거주. 나이·학력·한국어·소득 종합평가",docs:["통합신청서","여권·외국인등록증","★점수표 (자가 산정)","학위증명서","TOPIK 성적표","소득금액증명원","가점 증빙 (봉사확인서, 특허증 등)","체류지 입증서류"],reqs:["80점 이상 (170점 만점)","나이25+학력35+한국어20+소득60+가점40-감점80","품행단정","결격사유 없음"],tips:"★ 점수표: hikorea 양식 있으나 직접 입력. 가점 증빙이 당락 좌우. 연봉 4,000만원↑이면 체류기간 무관 신청.",sample:"점수자가산정표",scoring:true,routes:["F-5","귀화"]},
+{code:"F-2-99",name:"거주 (특례)",en:"Residence (Special)",cat:"거주",stay:"3년",desc:"법무부장관 인정 특례거주. 2026 배우자 요건 완화",docs:["통합신청서","여권·외국인등록증","소득증명서 (GNI 기준)","체류지 입증서류","가족관계증명서 (해당 시)"],reqs:["법무부장관 인정 특례사유","GNI 기준 소득 충족","5년↑ 합법 체류 (2026 완화)","TOPIK 4급↑ (2026 완화)"],tips:"GNI 기준: 가족 유무에 따라 1배 vs 1.5배 착오 주의. 수임가 1~2만원.",routes:["F-5"]},
+{code:"F-2-R",name:"거주 (지역)",en:"Residence (Regional)",cat:"거주",stay:"3년",desc:"지역특화 시범사업 (107개 지역)",docs:["통합신청서","여권·외국인등록증","해당 지역 거주 입증","소득증명서","지자체 추천서 (해당 시)"],reqs:["107개 인구소멸위기 지역 거주","해당 지역 취업 또는 사업"],tips:"2025-2026 시범사업. 지역별 조건 상이.",routes:["F-2-7"]},
+{code:"F-3",name:"동반",en:"Dependent",cat:"방문·동반",stay:"본인기간",desc:"D-1~E-7, F-2, F-4, H-2 배우자·미성년 자녀",docs:["여권","가족관계증명서 (혼인·출생)","본체류자 외국인등록증 사본","본체류자 소득증명","체류지 입증서류"],reqs:["본체류자의 법적 배우자 또는 미성년 자녀","부양능력 입증","가족관계 서류 인증 (아포스티유)"],tips:"취업 불가 (활동허가 필요). 본체류자 만료 시 동시 만료.",routes:[]},
+{code:"F-4",name:"재외동포",en:"Overseas Korean",cat:"동포",stay:"3년",desc:"대한민국 국적 보유했던 자·직계비속. 자유 체류·취업",docs:["여권","가족관계등록부 등 국적 입증","★동일인확인서 (성명 불일치 시)","범죄경력증명서 (21개 제한국가)"],reqs:["출생에 의한 대한민국 국적 보유 이력","단순노무 일부 제한","병역 미이행 남성: 40세까지 제한"],tips:"중국 동포: 직장 신고 불필요 (거소지 신고만). 여권 성명 불일치 시 동일인확인서 필요. 수임가 1~2만원.",routes:["F-5"]},
+{code:"F-5",name:"영주",en:"Permanent Res.",cat:"영주",stay:"영구 (10년 갱신)",desc:"영구 체류자격. 13개+ 세부유형. 취업 자유",docs:["통합신청서","여권·외국인등록증","★소득/재산 소명서","소득금액증명원 (GNI↑)","체류지 입증서류","신원보증서","사회통합프로그램 이수증","범죄경력증명서","건강검진서"],reqs:["전년도 GNI↑ 소득","사회통합(KIIP) 이수","5년↑ 합법 체류 (유형별 상이)","품행단정"],tips:"★ 소득/재산 소명서: 소득 안정성 설명. 자유 형식. 처리기간 4~5개월.",sample:"소득재산소명서",routes:["귀화"]},
+{code:"F-6",name:"결혼이민",en:"Marriage Immig.",cat:"결혼",stay:"3년",desc:"대한민국 국민의 배우자. 취업 자유. 2년 후 영주 가능",docs:["여권","★교제경위서 (A4 2~5쪽)","★자필 진술서","혼인관계증명서","배우자 소득증명","건강검진서","배우자 범죄경력증명서","주거지 입증서류","가족사진"],reqs:["대한민국 국민과 법적 혼인","진정한 혼인관계 입증 (면접·실태조사)","배우자 소득능력 (GNI↑)"],tips:"★ 교제경위서: 만남 경위, 교제 과정, 결혼 결심 이유, 가족 동의. 위장결혼 의심 시 사진·대화기록 첨부. ★ 자필 진술서: 각각 작성.",sample:"교제경위서",routes:["F-5","귀화"]},
+{code:"G-1",name:"기타",en:"Miscellaneous",cat:"기타",stay:"1년",desc:"산재·소송·난민신청·인도적체류 등 12유형",docs:["여권","★경위서/사유서","체류 사유 입증서류 (진단서, 소송서류 등)","신원보증서 (해당 시)"],reqs:["A-1~F-6, H-1, H-2 외 체류사유","G-1-5 난민신청: 난민 사유 소명","G-1-6 인도적체류: 본국 귀환 곤란"],tips:"★ 경위서: 체류 사유 상세 설명. 자유 형식. 난민신청자 6개월 후 취업 허가.",sample:"경위서",routes:[]},
+{code:"H-2",name:"방문취업",en:"Working Visit",cat:"동포",stay:"3년",desc:"외국국적동포 단순노무 포함 취업. 최장 4년 10개월",docs:["여권","가족관계 입증서류","취업교육 수료증","건강검진서","★취업개시 신고서 (취업 시)"],reqs:["외국국적동포","취업교육 이수","허용업종 내 취업","취업개시 신고 14일 이내"],tips:"무연고(H-2-5)는 추첨제. 허용업종 외 취업 시 벌금 (초범 500만원↑). 취업개시 신고 필수.",routes:["F-4","F-5"]}
+];
+
+const CATS=[...new Set(VISAS.map(v=>v.cat))];
+
+const SAMPLES={
+"사업계획서":{visa:"D-8",title:"사업계획서 작성 가이드",sections:["투자 목적 및 배경","사업 내용 (업종, 제품/서비스)","시장 분석 및 경쟁력","매출 추정 (3개년)","고용 계획 (내·외국인 구분)","투자금 사용 내역","향후 성장 전략"],note:"A4 5~10쪽. 투자금 3억 미만 시 자금사용내역 상세. 행정사 대행 50~200만원."},
+"고용사유서":{visa:"E-7",title:"고용사유서 작성 가이드",sections:["회사 개요 및 사업 내용","채용 직종 및 직무 설명","내국인 대체 불가 사유","채용 노력 증빙 (구인공고 등)","해당 외국인의 전문성·경력","고용 필요성 종합"],note:"포맷 자유. 채용공고 증빙 첨부 필수."},
+"교제경위서":{visa:"F-6",title:"교제경위서 작성 가이드",sections:["최초 만남 경위 (장소, 시기)","교제 과정 (연락, 만남 빈도)","결혼 결심 이유","양가 가족 소개·동의","결혼 준비 과정","향후 가정생활 계획"],note:"A4 2~5쪽. 자필 진술서 별도. 사진·대화기록 첨부 추천."},
+"구직활동계획서":{visa:"D-10",title:"구직활동 계획서 가이드",sections:["인적사항 및 학력","구직 희망 분야·직종","구직활동 계획 (기간별)","보유 역량·경력","기대 성과"],note:"졸업 후 취업 전환 핵심 서류. 구체적 계획이 중요."},
+"점수자가산정표":{visa:"F-2-7",title:"F-2-7 점수 자가산정표",sections:["나이 (최대 25점)","학력 (최대 35점) — 이공계 우대","한국어 (최대 20점) — TOPIK/사회통합","소득 (최대 60점) — GNI 배수","가점 (최대 40점) — KIIP, 봉사, 납세 등","감점 (최대 -80점) — 법위반, 범죄"],note:"hikorea 양식 있으나 사전 자가산정 추천. 합격선 80점."},
+"표준근로계약서":{visa:"E-9",title:"표준근로계약서 안내",sections:["고용주·근로자 인적사항","근무처 및 업종","계약기간","근무시간·휴일","임금 (최저임금↑)","숙식 제공 조건","계약 해지 조건"],note:"고용노동부 양식. 고용주/신청자 공동작성. 행정사 대행 가능."},
+"소득재산소명서":{visa:"F-5",title:"소득/재산 소명서 가이드",sections:["신청자 인적사항","소득 현황 (최근 3년)","소득 안정성 설명","재산 현황","향후 생계유지 계획"],note:"자유 형식. GNI↑ 소득 유지가 핵심."},
+"경위서":{visa:"G-1",title:"경위서/사유서 가이드",sections:["신청자 인적사항","체류 사유 상세 설명","사유 발생 경위","현재 상황","향후 계획 (귀국 일정 등)"],note:"유형별 사유 특화. 증빙서류(진단서 등) 첨부."}
+};
+
+const SC={
+  age:{label:"나이",max:25,opts:[{l:"18~24세",p:25},{l:"25~29세",p:20},{l:"30~34세",p:15},{l:"35~39세",p:10},{l:"40세↑",p:5}]},
+  education:{label:"학력",max:35,opts:[{l:"박사 (이공계/복수전공)",p:35},{l:"박사 (인문계)",p:32},{l:"석사 (이공계/복수전공)",p:20},{l:"석사 (인문계)",p:18},{l:"학사 (이공계/복수전공)",p:17},{l:"학사 (인문계)",p:15},{l:"전문학사",p:10},{l:"해당없음",p:0}]},
+  korean:{label:"한국어",max:20,opts:[{l:"TOPIK 5~6급 / 사회통합 5단계",p:20},{l:"TOPIK 4급 / 사회통합 4단계",p:15},{l:"TOPIK 3급 / 사회통합 3단계",p:10},{l:"TOPIK 2급",p:5},{l:"해당없음",p:0}]},
+  income:{label:"연간 소득",max:60,opts:[{l:"GNI 4배↑ (~1.8억)",p:60},{l:"GNI 3배↑ (~1.35억)",p:50},{l:"GNI 2배↑ (~9천만)",p:40},{l:"GNI 1.5배↑ (~6,750만)",p:30},{l:"GNI 1배↑ (~4,500만)",p:20},{l:"GNI 미만",p:0}]}
+};
+const BONUS=[{l:"사회통합(KIIP) 이수",p:10},{l:"사회봉사",p:5},{l:"한국 대학 졸업",p:5},{l:"고소득 성실 납세",p:5},{l:"이공계/전문 경력",p:5},{l:"사회기여·기부",p:5}];
+const PENALTY=[{l:"법 위반",p:-5},{l:"범죄 경력",p:-20},{l:"세금 체납",p:-5}];
+
+function Gauge({score}){
+  const pct=Math.min(Math.max(score/170*100,0),100);
+  const ok=score>=80;const col=ok?"#10b981":score>=60?"#f59e0b":"#ef4444";
+  return React.createElement("div",{style:{textAlign:"center",marginBottom:18}},
+    React.createElement("div",{style:{position:"relative",width:140,height:140,margin:"0 auto"}},
+      React.createElement("svg",{viewBox:"0 0 140 140"},
+        React.createElement("circle",{cx:70,cy:70,r:60,fill:"none",stroke:"#f0f0f0",strokeWidth:8}),
+        React.createElement("circle",{cx:70,cy:70,r:60,fill:"none",stroke:col,strokeWidth:8,strokeDasharray:`${pct*3.77} 377`,strokeLinecap:"round",style:{transition:"stroke-dasharray 0.5s",transform:"rotate(-90deg)",transformOrigin:"center"}})
+      ),
+      React.createElement("div",{style:{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}},
+        React.createElement("div",{style:{fontSize:34,fontWeight:800,color:col,lineHeight:1}},score),
+        React.createElement("div",{style:{fontSize:10,color:"#aaa"}},"/ 170")
+      )
+    ),
+    React.createElement("div",{style:{marginTop:6,fontSize:12,fontWeight:700,color:col,padding:"3px 12px",borderRadius:14,display:"inline-block",background:ok?"#ecfdf5":"#fef2f2"}},ok?"✓ 합격":"✗ 미달")
+  );
+}
+
+function App(){
+  const{m,dk}=useScreen();
+  const[view,setView]=useState("home");
+  const[q,setQ]=useState("");
+  const[cat,setCat]=useState("전체");
+  const[sel,setSel]=useState(null);
+  const[sk,setSk]=useState(null);
+  const[sc2,setSc2]=useState({age:-1,education:-1,korean:-1,income:-1});
+  const[bon,setBon]=useState([]);
+  const[pen,setPen]=useState([]);
+
+  const list=useMemo(()=>{
+    let l=VISAS;
+    if(cat!=="전체")l=l.filter(v=>v.cat===cat);
+    if(q.trim()){const s=q.toLowerCase();l=l.filter(v=>v.code.toLowerCase().includes(s)||v.name.includes(s)||v.en.toLowerCase().includes(s)||v.desc.includes(s)||v.docs.some(d=>d.toLowerCase().includes(s))||v.reqs.some(r=>r.includes(q)));}
+    return l;
+  },[q,cat]);
+
+  const total=useMemo(()=>{
+    let s=0;Object.entries(sc2).forEach(([k,i])=>{if(i>=0)s+=SC[k].opts[i].p;});
+    bon.forEach(i=>s+=BONUS[i].p);pen.forEach(i=>s+=PENALTY[i].p);return Math.max(s,0);
+  },[sc2,bon,pen]);
+
+  const go=v=>{setView(v);setSk(null);window.scrollTo({top:0,behavior:"smooth"});};
+
+  return(
+<div style={{minHeight:"100vh",background:"#f8f8fa",overflowX:"hidden"}}>
+{/* 헤더 */}
+<div style={{background:"linear-gradient(135deg,#0c1220,#1a2744 50%,#2d1b4e)",color:"#fff",padding:m?"12px 14px":"16px 24px",position:"sticky",top:0,zIndex:100,boxShadow:"0 2px 16px rgba(0,0,0,0.2)"}}>
+<div style={{maxWidth:960,margin:"0 auto",display:"flex",alignItems:"center",justifyContent:"space-between",gap:8}}>
+<div style={{cursor:"pointer",flex:1}} onClick={()=>{go("home");setSel(null);}}>
+<div style={{fontSize:m?15:20,fontWeight:800}}>🏔️ 아라랏 <span style={{fontWeight:400,fontSize:m?10:13,opacity:0.6}}>Ararat</span></div>
+{!m&&<div style={{fontSize:10,opacity:0.45,marginTop:1}}>ATOMIC 행정 · 대한민국 비자 가이드 · 38개 비자</div>}
+</div>
+<div style={{display:"flex",gap:5,flexShrink:0}}>
+<button onClick={()=>{go("home");setSel(null);}} style={{background:view==="home"?"rgba(255,255,255,0.15)":"transparent",border:"1px solid rgba(255,255,255,0.2)",color:"#fff",padding:m?"5px 9px":"6px 14px",borderRadius:8,fontSize:m?10:12,cursor:"pointer",fontWeight:600}}>목록</button>
+<button onClick={()=>go("calc")} style={{background:view==="calc"?"#e94560":"rgba(233,69,96,0.3)",border:"1px solid #e94560",color:"#fff",padding:m?"5px 9px":"6px 14px",borderRadius:8,fontSize:m?10:12,cursor:"pointer",fontWeight:700}}>점수계산</button>
+</div>
+</div>
+</div>
+
+<div style={{maxWidth:960,margin:"0 auto",padding:m?"12px":"20px 16px"}}>
+
+{/* 홈 */}
+{view==="home"&&!sk&&(
+<div>
+<div style={{background:"#fffbeb",border:"1px solid #fcd34d",borderRadius:10,padding:"10px 12px",marginBottom:12,fontSize:11,color:"#92400e",lineHeight:1.5}}>⚠️ 본 자료는 참고용이며 정부기관의 실제 요건·서류와 다를 수 있습니다. 업무 수행에 따른 책임은 본인에게 있으며, 최신 정보는 <strong>출입국관리사무소</strong> 또는 <strong>hikorea.go.kr</strong>에서 확인하시기 바랍니다.</div>
+<div style={{position:"relative",marginBottom:12}}>
+<input value={q} onChange={e=>setQ(e.target.value)} placeholder="비자코드·이름·서류·키워드 검색" style={{width:"100%",padding:"11px 12px 11px 38px",fontSize:m?13:14,border:"2px solid #e5e7eb",borderRadius:12,outline:"none",background:"#fff",boxSizing:"border-box"}} onFocus={e=>e.target.style.borderColor="#e94560"} onBlur={e=>e.target.style.borderColor="#e5e7eb"}/>
+<span style={{position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",fontSize:15}}>🔍</span>
+</div>
+<div style={{display:"flex",gap:5,marginBottom:12,overflowX:"auto",WebkitOverflowScrolling:"touch",paddingBottom:4,scrollbarWidth:"none"}}>
+{["전체",...CATS].map(c=><button key={c} onClick={()=>setCat(c)} style={{padding:"4px 11px",borderRadius:14,fontSize:10,fontWeight:600,border:cat===c?"2px solid #e94560":"1px solid #d1d5db",background:cat===c?"#fef2f2":"#fff",color:cat===c?"#e94560":"#888",cursor:"pointer",whiteSpace:"nowrap",flexShrink:0}}>{c}</button>)}
+</div>
+<div className="grid-cards" style={{display:"grid",gridTemplateColumns:"1fr",gap:8}}>
+{list.map(v=>(
+<div key={v.code} onClick={()=>{setSel(v);go("detail");}} style={{background:"#fff",borderRadius:12,padding:m?"12px 14px":"16px 20px",cursor:"pointer",border:"1px solid #e8e8e8",position:"relative",overflow:"hidden",transition:"box-shadow 0.15s"}} onMouseEnter={e=>{if(!m)e.currentTarget.style.boxShadow="0 4px 16px rgba(0,0,0,0.06)"}} onMouseLeave={e=>e.currentTarget.style.boxShadow=""}>
+<div style={{position:"absolute",top:0,left:0,width:4,height:"100%",background:CC[v.cat]||"#666"}}/>
+<div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap",marginBottom:3}}>
+<span style={{fontSize:11,fontWeight:700,padding:"2px 7px",borderRadius:5,background:CC[v.cat]||"#666",color:"#fff",whiteSpace:"nowrap"}}>{v.code}</span>
+{v.scoring&&<span style={{fontSize:9,background:"#fef3c7",color:"#92400e",padding:"1px 5px",borderRadius:3,fontWeight:700}}>점수제</span>}
+{v.sample&&<span style={{fontSize:9,background:"#dbeafe",color:"#1e40af",padding:"1px 5px",borderRadius:3,fontWeight:700}}>📄예시</span>}
+</div>
+<div style={{fontWeight:700,fontSize:m?14:15,color:"#111",lineHeight:1.3}}>{v.name} <span style={{fontWeight:400,fontSize:11,color:"#aaa"}}>{v.en}</span></div>
+<div style={{fontSize:12,color:"#888",lineHeight:1.4,marginTop:3,display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical",overflow:"hidden"}}>{v.desc}</div>
+<div style={{display:"flex",gap:6,marginTop:5,flexWrap:"wrap"}}><span style={{fontSize:10,color:"#aaa"}}>체류 {v.stay}</span><span style={{fontSize:10,color:"#ccc"}}>·</span><span style={{fontSize:10,color:"#aaa"}}>서류 {v.docs.length}종</span>{v.routes&&v.routes.length>0&&<span style={{fontSize:10,color:"#7c3aed"}}>→ {v.routes.join(", ")}</span>}</div>
+</div>
+))}
+</div>
+<div style={{textAlign:"center",padding:"14px 0",fontSize:10,color:"#ccc"}}>{list.length}/{VISAS.length}개</div>
+</div>
+)}
+
+{/* 상세 */}
+{view==="detail"&&sel&&!sk&&(
+<div>
+<button onClick={()=>go("home")} style={{background:"none",border:"none",color:"#e94560",cursor:"pointer",fontSize:13,fontWeight:600,marginBottom:10,padding:0}}>← 목록</button>
+<div style={{background:"#fff",borderRadius:14,padding:m?14:22,border:"1px solid #e8e8e8"}}>
+<div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap",marginBottom:14}}>
+<span style={{background:CC[sel.cat]||"#666",color:"#fff",fontSize:m?14:18,fontWeight:800,padding:"6px 14px",borderRadius:8}}>{sel.code}</span>
+<div><div style={{fontSize:m?18:24,fontWeight:800}}>{sel.name}</div><div style={{fontSize:12,color:"#aaa"}}>{sel.en}</div></div>
+</div>
+<div style={{fontSize:13,color:"#444",lineHeight:1.7,marginBottom:16}}>{sel.desc}</div>
+<div style={{display:"grid",gridTemplateColumns:m?"1fr":"1fr 1fr 1fr",gap:8,marginBottom:16}}>
+{[["체류기간",sel.stay],["분류",sel.cat],["서류",sel.docs.length+"종"]].map(([k,v])=><div key={k} style={{background:"#f9fafb",borderRadius:10,padding:10}}><div style={{fontSize:10,color:"#aaa",fontWeight:600}}>{k}</div><div style={{fontSize:14,fontWeight:700,marginTop:2}}>{v}</div></div>)}
+</div>
+
+{/* 서류 */}
+<div style={{marginBottom:14}}>
+<div style={{fontSize:13,fontWeight:700,color:"#333",marginBottom:6}}>📋 필요 서류</div>
+{sel.docs.map((d,i)=><div key={i} style={{display:"flex",alignItems:"flex-start",gap:8,padding:"8px 10px",background:d.startsWith("★")?"#fffbeb":"#f9fafb",borderRadius:8,border:d.startsWith("★")?"1px solid #fcd34d":"1px solid transparent",marginBottom:3}}><span style={{fontSize:12,color:d.startsWith("★")?"#f59e0b":"#10b981",flexShrink:0}}>{d.startsWith("★")?"⚠️":"✓"}</span><span style={{fontSize:13,color:"#333",lineHeight:1.4}}>{d.replace("★","")}</span></div>)}
+</div>
+
+{/* 요건 */}
+<div style={{marginBottom:14}}>
+<div style={{fontSize:13,fontWeight:700,color:"#333",marginBottom:6}}>✅ 자격 요건</div>
+{sel.reqs.map((r,i)=><div key={i} style={{fontSize:13,color:"#444",lineHeight:1.5,padding:"4px 0",borderBottom:"1px solid #f3f4f6"}}><span style={{color:"#e94560",fontWeight:700,marginRight:6}}>·</span>{r}</div>)}
+</div>
+
+{/* 팁 */}
+<div style={{marginBottom:14}}>
+<div style={{fontSize:13,fontWeight:700,color:"#333",marginBottom:6}}>💡 실무 팁</div>
+<div style={{fontSize:13,color:"#555",lineHeight:1.7,background:"#f0fdf4",padding:12,borderRadius:10,border:"1px solid #bbf7d0"}}>{sel.tips}</div>
+</div>
+
+{sel.sample&&<button onClick={()=>setSk(sel.sample)} style={{width:"100%",padding:12,background:"#1e40af",color:"#fff",border:"none",borderRadius:10,fontSize:13,fontWeight:700,cursor:"pointer",marginBottom:10}}>📄 {sel.sample} 작성 가이드 보기</button>}
+{sel.routes&&sel.routes.length>0&&<div style={{marginBottom:12}}><div style={{fontSize:12,fontWeight:700,color:"#555",marginBottom:5}}>🔀 전환 경로</div><div style={{display:"flex",flexWrap:"wrap",gap:5}}>{sel.routes.map(r=><span key={r} onClick={()=>{const t=VISAS.find(v=>v.code===r);if(t){setSel(t);window.scrollTo({top:0});}}} style={{background:"#ede9fe",color:"#7c3aed",fontSize:11,fontWeight:600,padding:"4px 10px",borderRadius:6,cursor:"pointer"}}>{sel.code} → {r}</span>)}</div></div>}
+{sel.scoring&&<button onClick={()=>go("calc")} style={{width:"100%",padding:12,background:"linear-gradient(135deg,#e94560,#c026d3)",color:"#fff",border:"none",borderRadius:10,fontSize:14,fontWeight:700,cursor:"pointer"}}>🧮 점수 계산기</button>}
+</div>
+</div>
+)}
+
+{/* 예시문서 */}
+{sk&&SAMPLES[sk]&&(
+<div>
+<button onClick={()=>setSk(null)} style={{background:"none",border:"none",color:"#e94560",cursor:"pointer",fontSize:13,fontWeight:600,marginBottom:10,padding:0}}>← 돌아가기</button>
+<div style={{background:"#fff",borderRadius:14,padding:m?14:22,border:"1px solid #e8e8e8"}}>
+<div style={{fontSize:m?17:20,fontWeight:800,marginBottom:4}}>📄 {SAMPLES[sk].title}</div>
+<div style={{fontSize:12,color:"#aaa",marginBottom:14}}>비자: {SAMPLES[sk].visa}</div>
+<div style={{marginBottom:16}}>
+<div style={{fontSize:13,fontWeight:700,marginBottom:8}}>작성 항목</div>
+{SAMPLES[sk].sections.map((s,i)=><div key={i} style={{display:"flex",gap:8,padding:"10px 12px",background:i%2===0?"#f9fafb":"#fff",borderRadius:8,marginBottom:2}}><span style={{color:"#e94560",fontWeight:800,fontSize:14,width:20,textAlign:"center",flexShrink:0}}>{i+1}</span><span style={{fontSize:13,color:"#333"}}>{s}</span></div>)}
+</div>
+<div style={{background:"#fffbeb",padding:12,borderRadius:10,border:"1px solid #fcd34d"}}><div style={{fontSize:12,fontWeight:700,color:"#92400e",marginBottom:4}}>💡 작성 팁</div><div style={{fontSize:13,color:"#78350f",lineHeight:1.6}}>{SAMPLES[sk].note}</div></div>
+</div>
+</div>
+)}
+
+{/* 점수계산기 */}
+{view==="calc"&&!sk&&(
+<div>
+<div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
+<div><div style={{fontSize:m?16:19,fontWeight:800}}>F-2-7 점수 계산기</div><div style={{fontSize:10,color:"#aaa",marginTop:2}}>합격 80점 / 만점 170점</div></div>
+<button onClick={()=>{setSc2({age:-1,education:-1,korean:-1,income:-1});setBon([]);setPen([]);}} style={{background:"#f3f4f6",border:"none",padding:"6px 11px",borderRadius:7,fontSize:10,fontWeight:600,cursor:"pointer",color:"#888"}}>초기화</button>
+</div>
+<Gauge score={total}/>
+{Object.entries(SC).map(([key,c])=>{const idx=sc2[key];return(
+<div key={key} style={{background:"#fff",borderRadius:12,padding:m?11:14,marginBottom:8,border:"1px solid #eee"}}>
+<div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}><span style={{fontWeight:700,fontSize:13}}>{c.label}</span><span style={{fontSize:10,color:"#aaa"}}>최대 {c.max}점{idx>=0?` · ${c.opts[idx].p}점`:""}</span></div>
+{c.opts.map((o,i)=><label key={i} style={{display:"flex",alignItems:"center",gap:7,padding:m?"5px 8px":"6px 10px",borderRadius:7,cursor:"pointer",fontSize:m?11:12,marginBottom:1,background:idx===i?"#fef2f2":"#fafafa",border:idx===i?"1.5px solid #e94560":"1px solid transparent"}}><input type="radio" name={key} checked={idx===i} onChange={()=>setSc2(s=>({...s,[key]:i}))} style={{accentColor:"#e94560",flexShrink:0}}/><span style={{flex:1,lineHeight:1.3}}>{o.l}</span><span style={{fontWeight:700,color:o.p>0?"#10b981":"#aaa",fontSize:10,flexShrink:0}}>{o.p>0?"+"+o.p:o.p}</span></label>)}
+</div>);})}
+<div style={{background:"#fff",borderRadius:12,padding:m?11:14,marginBottom:8,border:"1px solid #eee"}}>
+<div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}><span style={{fontWeight:700,fontSize:13}}>가점</span><span style={{fontSize:10,color:"#aaa"}}>최대 40점</span></div>
+{BONUS.map((o,i)=><label key={i} style={{display:"flex",alignItems:"center",gap:7,padding:m?"5px 8px":"6px 10px",borderRadius:7,cursor:"pointer",fontSize:m?11:12,marginBottom:1,background:bon.includes(i)?"#ecfdf5":"#fafafa",border:bon.includes(i)?"1.5px solid #10b981":"1px solid transparent"}}><input type="checkbox" checked={bon.includes(i)} onChange={()=>setBon(b=>b.includes(i)?b.filter(x=>x!==i):[...b,i])} style={{accentColor:"#10b981",flexShrink:0}}/><span style={{flex:1}}>{o.l}</span><span style={{fontWeight:700,color:"#10b981",fontSize:10,flexShrink:0}}>+{o.p}</span></label>)}
+</div>
+<div style={{background:"#fff",borderRadius:12,padding:m?11:14,marginBottom:8,border:"1px solid #eee"}}>
+<div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}><span style={{fontWeight:700,fontSize:13}}>감점</span><span style={{fontSize:10,color:"#ef4444"}}>최대 -80</span></div>
+{PENALTY.map((o,i)=><label key={i} style={{display:"flex",alignItems:"center",gap:7,padding:m?"5px 8px":"6px 10px",borderRadius:7,cursor:"pointer",fontSize:m?11:12,marginBottom:1,background:pen.includes(i)?"#fef2f2":"#fafafa",border:pen.includes(i)?"1.5px solid #ef4444":"1px solid transparent"}}><input type="checkbox" checked={pen.includes(i)} onChange={()=>setPen(p=>p.includes(i)?p.filter(x=>x!==i):[...p,i])} style={{accentColor:"#ef4444",flexShrink:0}}/><span style={{flex:1}}>{o.l}</span><span style={{fontWeight:700,color:"#ef4444",fontSize:10,flexShrink:0}}>{o.p}</span></label>)}
+</div>
+<div style={{background:total>=80?"linear-gradient(135deg,#ecfdf5,#d1fae5)":"linear-gradient(135deg,#fef2f2,#fee2e2)",borderRadius:12,padding:m?14:18,textAlign:"center",marginTop:4}}>
+<div style={{fontSize:11,color:"#888",marginBottom:4}}>총 점수</div>
+<div style={{fontSize:32,fontWeight:800,color:total>=80?"#059669":"#dc2626"}}>{total}점</div>
+<div style={{fontSize:12,fontWeight:600,color:total>=80?"#059669":"#dc2626",marginTop:3}}>{total>=80?"F-2-7 거주 자격 충족 ✓":(80-total)+"점 부족"}</div>
+{total>=80&&<div style={{fontSize:10,color:"#888",marginTop:8,lineHeight:1.5}}>예상 체류: <strong>{total>=130?"5년":total>=120?"3년":total>=110?"2년":"1년"}</strong> · F-5(영주) → 귀화</div>}
+</div>
+</div>
+)}
+
+</div>
+
+{/* 개인정보처리방침 */}
+{view==="privacy"&&(
+<div>
+<button onClick={()=>go("home")} style={{background:"none",border:"none",color:"#e94560",cursor:"pointer",fontSize:13,fontWeight:600,marginBottom:10,padding:0}}>← 목록</button>
+<div style={{background:"#fff",borderRadius:14,padding:m?14:22,border:"1px solid #e8e8e8"}}>
+<div style={{display:"inline-block",fontSize:10,fontWeight:700,padding:"3px 8px",borderRadius:5,background:"#dbeafe",color:"#1e40af",marginBottom:12}}>📋 개인정보처리방침</div>
+<div style={{fontSize:m?17:20,fontWeight:800,marginBottom:4}}>개인정보처리방침</div>
+<div style={{fontSize:11,color:"#aaa",marginBottom:16}}>시행일: 2026년 2월 14일</div>
+<div style={{fontSize:13,color:"#555",lineHeight:1.8,marginBottom:14}}><strong>아라랏 Ararat</strong>(이하 "본 서비스")은 ATOMIC 행정(이하 "운영자")이 운영하는 대한민국 비자 정보 안내 서비스입니다.</div>
+{[
+["1. 수집하는 개인정보","본 서비스는 회원가입·로그인 기능이 없으며, 이용자의 개인정보를 직접 수집하지 않습니다."],
+["2. 광고 서비스 (Google AdSense)","본 서비스는 Google AdSense를 통해 광고를 게재하고 있으며, 이 과정에서 Google이 쿠키(Cookie), 기기 정보, 브라우저 유형, 대략적인 위치 정보, 광고 상호작용 데이터를 자동 수집할 수 있습니다. 이용자는 브라우저 설정에서 쿠키를 비활성화하거나, Google 광고 설정(adssettings.google.com)에서 맞춤 광고를 해제할 수 있습니다."],
+["3. 개인정보의 제3자 제공","운영자는 이용자의 개인정보를 제3자에게 제공하지 않습니다. 단, Google AdSense의 광고 서비스 운영을 위해 Google의 개인정보처리방침이 적용됩니다."],
+["4. 데이터 보관","본 서비스는 서버를 운영하지 않으며, 모든 데이터는 이용자의 브라우저에서만 처리됩니다. 별도의 데이터 저장·보관을 하지 않습니다."],
+["5. 이용자의 권리","쿠키 수집 거부는 브라우저 설정에서, 맞춤 광고 해제는 Google 광고 설정에서 변경 가능합니다."],
+["6. 문의","개인정보 관련 문의: ATOMIC 행정 · clausewitz jeong\n이메일: infan11648@gmail.com"]
+].map(([t,c],i)=><div key={i} style={{marginBottom:14}}><div style={{fontSize:14,fontWeight:700,color:"#333",marginBottom:6,paddingLeft:10,borderLeft:"3px solid #e94560"}}>{t}</div><div style={{fontSize:13,color:"#555",lineHeight:1.8,whiteSpace:"pre-line"}}>{c}</div></div>)}
+</div>
+</div>
+)}
+
+{/* 이용약관 */}
+{view==="terms"&&(
+<div>
+<button onClick={()=>go("home")} style={{background:"none",border:"none",color:"#e94560",cursor:"pointer",fontSize:13,fontWeight:600,marginBottom:10,padding:0}}>← 목록</button>
+<div style={{background:"#fff",borderRadius:14,padding:m?14:22,border:"1px solid #e8e8e8"}}>
+<div style={{display:"inline-block",fontSize:10,fontWeight:700,padding:"3px 8px",borderRadius:5,background:"#fce7f3",color:"#9d174d",marginBottom:12}}>📜 이용약관</div>
+<div style={{fontSize:m?17:20,fontWeight:800,marginBottom:4}}>이용약관</div>
+<div style={{fontSize:11,color:"#aaa",marginBottom:16}}>시행일: 2026년 2월 14일</div>
+{[
+["1. 서비스 개요","본 서비스는 대한민국 비자 관련 정보를 정리하여 제공하는 참고용 안내 서비스입니다. 38개 비자 유형별 필요 서류, 자격 요건, 실무 팁, 점수 계산기 등을 포함합니다."],
+["2. 면책 조항","본 서비스에서 제공하는 정보는 참고 목적이며, 정부기관의 실제 요건 및 서류와 다를 수 있습니다. 본 서비스의 정보를 근거로 한 업무 수행의 결과에 대해 운영자는 법적 책임을 지지 않습니다. 최신 정보는 반드시 출입국관리사무소 또는 hikorea.go.kr에서 확인하시기 바랍니다. 비자 관련 법률·제도는 수시로 변경될 수 있으며, 본 서비스의 업데이트가 지연될 수 있습니다."],
+["3. 정보 출처","본 서비스의 정보는 법무부 출입국·외국인정책본부의 공개 자료를 기반으로 정리·가공한 것입니다."],
+["4. 지적재산권","본 서비스의 UI 디자인, 정리 구조, 점수 계산 알고리즘 등은 운영자의 저작물이며, 무단 복제·배포를 금합니다."],
+["5. 서비스 변경·중단","운영자는 사전 통지 없이 서비스 내용을 변경하거나 중단할 수 있으며, 이에 대한 책임을 지지 않습니다."],
+["6. 문의","ATOMIC 행정 · clausewitz jeong\n이메일: infan11648@gmail.com"]
+].map(([t,c],i)=><div key={i} style={{marginBottom:14}}><div style={{fontSize:14,fontWeight:700,color:"#333",marginBottom:6,paddingLeft:10,borderLeft:"3px solid #e94560"}}>{t}</div><div style={{fontSize:13,color:"#555",lineHeight:1.8,whiteSpace:"pre-line"}}>{c}</div></div>)}
+</div>
+</div>
+)}
+
+{/* 푸터 */}
+<div style={{textAlign:"center",padding:"16px 12px",fontSize:9,color:"#bbb",borderTop:"1px solid #f0f0f0",marginTop:28}}>
+<div style={{marginBottom:6,color:"#999",fontSize:10,lineHeight:1.6}}>⚠️ 본 자료는 참고용이며, 정부기관에서 요구하는 실제 요건·서류와 다를 수 있습니다.<br/>업무 수행으로 인한 책임은 본인에게 있으며, 최신 정보는 반드시 출입국관리사무소 또는 hikorea.go.kr에서 확인하시기 바랍니다.</div>
+아라랏 Ararat v2.4 · ATOMIC 행정 · 38개 비자 · © clausewitz jeong
+<div style={{marginTop:8,display:"flex",justifyContent:"center",gap:16}}>
+<span onClick={()=>go("privacy")} style={{color:"#e94560",fontSize:11,fontWeight:600,cursor:"pointer"}}>개인정보처리방침</span>
+<span onClick={()=>go("terms")} style={{color:"#e94560",fontSize:11,fontWeight:600,cursor:"pointer"}}>이용약관</span>
+</div>
+</div>
+</div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(App));
+</script>
+</body>
+</html>
